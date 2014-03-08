@@ -1,7 +1,7 @@
 mastermind-15c
 ==============
 
-A clone of Mastermind for the HP 15c scientific calculator. Inspired by http://www.fatpat.com/software/personal/hp15c/mastermind.htm) but coded from scratch.
+A clone of Mastermind for the HP 15c scientific calculator. Inspired by http://www.fatpat.com/software/personal/hp15c/mastermind.htm but coded from scratch.
 
 Features:
 * guess history
