@@ -1,0 +1,59 @@
+-- A Mastermind-like game with distinct digits, 4x10, 10 tries w/ history
+--     for the HP-15C scientific calculator. Program size: 196 bytes
+-- Usage: f A to start the program
+-- Input guess, distinct digits (e.g. 1234), then press R/S
+-- Output format: N.XXXX   AB
+--     N is current number of guess
+--     XXXX is current guess
+--     A is number of correct digits in correct positions
+--     B is number of correct digits in incorrect positions
+-- You have 10 tries. You can check your previous guesses by doing RCL .N
+-- If you win: screen flashes N.XXXX (number of guesses.correct guess)
+-- If you lose: screen flashes -0.XXXX (correct number)
+-- Press R/S after game ends to reset state
+
+f LBL A g CLx f REG                     -- initialize the program
+        f SCI 4 1.009 STO.0             -- prepare fisher-yates shuffle
+f LBL.0 1 + g INT f RAN# * g INT        -- x: j                 I:0
+        STO I RCL (i)                   -- x: a[j], y: j        I:j
+        RCL.0 g INT f x<> I             -- x: j, y: a[j], z: j  I:i
+        x<>y STO (i)                    -- x: a[j], y: j, z: j  I:i
+        x<>y                            -- x: j, y: a[j], z: j  I:i
+        f x<> I STO (i)                 -- x: i, y: a[j], z: j, I:j
+        f ISG.0 GTO.0                   -- uses R0-R3 for number to guess
+        0 STO.0                         -- guess# in .0, guess history in .1-.9
+                                                                                
+------------------------------------------ BEGIN MAIN PROGRAM LOOP
+f LBL.1 R/S GSB.4                       -- R8 for later use
+f LBL.2 10 STO 9 / ENTER f FRAC 10 *    -- R9 now stores current increment
+        STO (i) x<>y g INT              -- store guess digits separately
+        f DSE I GTO.2                   -- repeat for each guess digit
+        GSB.4 g R^ 0 STO 8              -- R8 stores results
+        1 STO + .0                      -- increment # of guesses
+f LBL.3 RCL 0 RCL 4 g TEST 5 GSB.6      |
+        RCL 1 RCL 5 g TEST 5 GSB.6      |  compare digit-by-digit,
+        RCL 2 RCL 6 g TEST 5 GSB.6      |  adding current increment
+        RCL 3 RCL 7 g TEST 5 GSB.6      |
+        40 RCL 8 g TEST 9 GTO.7         -- XXX CHECK IF WON
+        1 STO 9 RCL 0                   -- set current increment to 1
+        f x<> 1 f x<> 2 f x<> 3 f x<> 0 -- cycle registers
+        f DSE I GTO.3                   -- repeat for all positions
+        RCL.0 9 g TEST 8 GTO.8 x<>y     -- XXX CHECK IF LOST
+        GSB.4 GSB.5 RCL 8 10^x *        -- G.NNNN   XY
+        RCL.0 STO I 10 STO + I          -- I addresses current history register
+        Rv Rv STO (i) GTO.1             -- store current guess; get another one
+------------------------------------------ END MAIN PROGRAM LOOP
+                                                                                
+f LBL.4 7.003 STO I Rv g RTN            -- prepare to loop through registers
+f LBL.5 3 RCL - I g INT 10^x            |  displays crt. guess (NNNN) by adding
+        RCL * (i) +                     |  0.NNNN to current number of tries
+        f DSE I GTO.5 g RTN             |  also used to display solution
+                                                                                
+f LBL.6 RCL 9 STO + 8 g RTN             -- increment results
+                                                                                
+f LBL.7 RCL.0 GSB.4 GSB.5 GTO.9         -- G.NNNN
+f LBL.8 RCL 0 STO 4 RCL 1 STO 5         |  copy solution to current numbers
+        RCL 2 STO 6 RCL 3 STO 7         |  so we can use subroutine .5
+        0 GSB.4 GSB.5 CHS               -- lose. show solution (-0.SSSS)
+f LBL.9 f FIX 4 g SF 9 R/S              -- returns to FIX 4 and flashes result
+        g CF 9 f SUM f REG g RTN        -- reverts
